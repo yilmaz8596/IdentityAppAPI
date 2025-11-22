@@ -2,8 +2,13 @@
 using API.Utility;
 using IdentityAppAPI.Data;
 using IdentityAppAPI.Models;
+using IdentityAppAPI.Services;
+using IdentityAppAPI.Services.IServices;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 
 namespace IdentityAppAPI.Extensions
@@ -16,7 +21,10 @@ namespace IdentityAppAPI.Extensions
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+
+            builder.Services.AddScoped<ITokenService, TokenService>();  
             return builder;
+
         }
 
         public static WebApplicationBuilder AddAuthenticationServices(this WebApplicationBuilder builder) {
@@ -35,6 +43,36 @@ namespace IdentityAppAPI.Extensions
             })
             .AddEntityFrameworkStores<Context>()
             .AddDefaultTokenProviders();
+
+            builder.Services.AddAuthentication(opt =>
+            {
+                opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddCookie(opt =>
+            {
+                opt.Cookie.Name = SD.IdentityAppCookie;
+            }).AddJwtBearer(opt =>
+            {
+                opt.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"])),
+                    ValidIssuer = builder.Configuration["JWT:Issuer"],
+                    ValidateIssuer = true,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero,
+                };
+
+                opt.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                       context.Token = context.Request.Cookies[SD.IdentityAppCookie];
+                       return Task.CompletedTask;
+                    }
+                };
+            });
             return builder;
         }
     }
