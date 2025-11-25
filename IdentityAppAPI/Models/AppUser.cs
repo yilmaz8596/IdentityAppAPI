@@ -6,6 +6,7 @@ namespace IdentityAppAPI.Models
 {
     public class AppUser : IdentityUser<int>
     {
+        public string Name { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool isActive { get; set; } = true;
 

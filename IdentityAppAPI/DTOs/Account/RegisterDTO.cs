@@ -6,17 +6,13 @@ namespace IdentityAppAPI.DTOs.Account
 {
     public class RegisterDTO
     {
-        private string _userName;
+        private string _name;
 
         [Required]
-        [StringLength(20, MinimumLength = 3, ErrorMessage ="Username must be at least {2} and maximum {1} characters.")]
+        [StringLength(20, MinimumLength = 3, ErrorMessage = "Username must be at least {2} and maximum {1} characters.")]
         [RegularExpression(SD.UserNameRegex, ErrorMessage = "Username can only contain letters, numbers, and underscores.")]
-        
-        public string UserName
-        {
-            get => _userName;
-            set => _userName = value?.ToLower();
-        }
+
+        public string Name { get; set; }
 
         [Required]
         [RegularExpression(SD.EmailRegex, ErrorMessage = "Invalid email address.")]
